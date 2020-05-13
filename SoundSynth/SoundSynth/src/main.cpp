@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <Windows.h>
 #include "noiseMaker.h"
 
 double makeNoise(double dTime)
@@ -27,7 +28,7 @@ int main()
 
 	while (1)
 	{
-
+		
 	}
 
 

@@ -18,7 +18,7 @@ const double PI = 2.0 * acos(0.0);
 template <class T>
 class NoiseMaker
 {
-
+private:
 	double(*m_userFunction)(double);
 	unsigned int sampleRate;
 	unsigned int blockNum;
@@ -36,8 +36,8 @@ class NoiseMaker
 	std::atomic<double> globalTime;
 	void waveOutProc(HWAVEOUT hWaveOut, UINT uMsg, DWORD dwParam1, DWORD dwParam2)
 	{
-		if (uMsg != WOM_DONE)
-			return;
+		if (uMsg != WOM_DONE) return;
+		
 		blockFree++;
 		std::unique_lock<std::mutex> lm(muxNonZeroBlock);
 		cvNonZeroBlock.notify_one();
@@ -82,7 +82,7 @@ class NoiseMaker
 				else
 					newSample = (T)(clip(m_userFunction(globalTime), 1.0) * dMaxSample);
 
-				blockMemory[blockCurrent + i] = newSample;
+				blockMemory[currentBlock + i] = newSample;
 				prevSample = newSample;
 				globalTime = globalTime + timeStep;
 			}
@@ -111,6 +111,7 @@ public:
 			channels = channels_;
 			blockSamples = blockSamples_;
 			blockNum = blocks_;
+			blockFree = blockNum;
 			blockCurrent = 0;
 			blockMemory = nullptr;
 			waveHeaders = nullptr;
@@ -119,9 +120,10 @@ public:
 			//Device Validation
 
 			std::vector<std::wstring> devices = Enumerate();
-			auto d = find(devices.begin(), devices.end(), outputDevice_);
+			auto d = std::find(devices.begin(), devices.end(), outputDevice_);
 			if (d != devices.end())
 			{
+
 				int devId = std::distance(devices.begin(), d);
 				WAVEFORMATEX waveFormat;
 				waveFormat.wFormatTag = WAVE_FORMAT_PCM;
@@ -210,3 +212,4 @@ public:
 				return fmax(dSample, -dMax);
 		}
 };
+
